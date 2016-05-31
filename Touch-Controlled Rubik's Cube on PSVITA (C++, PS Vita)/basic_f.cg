@@ -1,0 +1,70 @@
+﻿/* SCE CONFIDENTIAL
+ * PlayStation(R)Vita Programmer Tool Runtime Library Release 02.000.081
+ * Copyright (C) 2010 Sony Computer Entertainment Inc. 
+ * All Rights Reserved.
+ */
+
+uniform sampler2D textureSampler : TEXUNIT0;
+uniform sampler2D normalSampler : TEXUNIT1;
+
+
+float computeFresnel(float4 V, float4 H)
+{
+	float F = (1- dot(V, H)).x;
+	F *= F;
+	F *= F;
+
+	return F;
+}
+
+float4 main(float4 vColor : TEXCOORD0, float4 vNormal : TEXCOORD1, float4 vTangent : TEXCOORD2, float2 texOut: TEXCOORD3, float3 position : TEXCOORD4)
+{
+	float3 Q1 = ddx(position);
+	float3 Q2 = ddy(position);
+	float2 st1 = ddx(texOut);
+	float2 st2 = ddy(texOut);
+	float3 t = normalize(Q1*st2.x - Q2*st1.x);
+	float3 b = normalize(-Q1*st2.y + Q2*st1.y);
+
+	float3 worldNormal = normalize(vNormal).xyz;
+	float3 worldTangent = normalize(vTangent).xyz;
+	float3 worldBitangent = normalize(cross(worldNormal, worldTangent).xyz);
+	
+	float4 textureData = tex2D(textureSampler, texOut);
+	float4 normalMap = tex2D(normalSampler, texOut);
+	float4 normalTs = normalMap * 2.0f -1.0f;
+
+	float4 diffuseColor = textureData * vColor;
+	float4 specColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
+	
+	
+	float3 lightPos = float3(-1.0f, -1.0f, -1.0f);
+	float3 eyePos = float3(0.f, 0.f, -3.5f);
+
+	
+	float3 N = normalTs.x * worldBitangent + normalTs.y * worldTangent + normalTs.z * worldNormal;
+	float3 L = normalize(lightPos - position);
+	float3 R = reflect(-L, N);
+	float3 V = normalize(eyePos - position);
+	float3 H = (L + V);
+
+	float shininess = 2.0f;
+
+	float lambertian = max(dot(L, N), 0.0f);
+	float specular = 0.0f;
+
+	if (lambertian > 0)
+	{
+		float specAngle = max(dot(R, V), 0.0f);
+		specular = pow(specAngle, shininess);
+	}
+
+	float4 diffuse = lambertian * diffuseColor;
+
+	float f = computeFresnel(float4(V, 0.f), float4(H,0.f));
+	specular *= f;
+
+	float4 color;
+	color = diffuse + specular * specColor ;
+	return color;
+}

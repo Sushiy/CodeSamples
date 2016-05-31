@@ -1,0 +1,64 @@
+﻿/* SCE CONFIDENTIAL
+ * PlayStation(R)Vita Programmer Tool Runtime Library Release 02.000.081
+ * Copyright (C) 2010 Sony Computer Entertainment Inc. 
+ * All Rights Reserved.
+ */
+
+uniform float4x4 wvp;
+uniform float4x4 rot;
+
+uniform float4x4 faceX;
+uniform float4x4 faceY;
+uniform float4x4 faceZ;
+
+void main(
+	float3 aPosition,
+	float3 aNormal,
+	float3 aTangent,
+	float4 aColor,
+	int turnFaceID,
+	float2 texIn,
+	float4 out vPosition : POSITION,
+	float4 out vColor : TEXCOORD0,
+	float4 out vNormal : TEXCOORD1,
+	float4 out vTangent : TEXCOORD2,
+	float2 out texOut : TEXCOORD3,
+	float3 out position : TEXCOORD4)
+{
+	texOut = texIn;
+
+	if(turnFaceID == 0)
+	{
+		vPosition = mul(mul(faceX,float4(aPosition, 1.f)), wvp);
+		vNormal = mul(mul(faceX,float4(aNormal, 1.f)), rot);
+		vTangent = mul(mul(faceX,float4(aTangent, 1.f)), rot);
+		vColor = aColor;
+	}
+
+	else if(turnFaceID == 1)
+	{
+		vPosition = mul(mul(faceY,float4(aPosition, 1.f)), wvp);
+		vNormal = mul(mul(faceY,float4(aNormal, 0.f)), rot);
+		vTangent = mul(mul(faceY,float4(aTangent, 0.f)), rot);
+		vColor = aColor;
+	}
+
+	else if(turnFaceID == 2)
+	{
+		vPosition = mul(mul(faceZ,float4(aPosition, 1.f)), wvp);
+		vNormal = mul(mul(faceZ,float4(aNormal, 0.f)), rot);
+		vTangent = mul(mul(faceZ,float4(aTangent, 0.f)), rot);
+		vColor = aColor;
+
+	}
+
+	else
+	{
+		vPosition = mul(float4(aPosition, 1.f), wvp);
+		vNormal = mul(float4(aNormal, 0.f), rot);
+		vTangent = mul(float4(aTangent, 0.f), rot);
+		vColor = aColor;
+	}
+
+	position = vPosition.xyz;
+}
