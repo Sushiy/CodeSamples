@@ -33,7 +33,7 @@ public class Interactable : MonoBehaviour
 	{
 		foreach (Interaction _i in m_listInteractions) 
 		{
-			if(_i.Type == InteractionType.Use /*&& _i.Tool == _itemTool*/)
+			if(_i.Type == InteractionType.Use && _i.Tool == _itemTool)
 				_i.Interact ();
 		}
 	}
